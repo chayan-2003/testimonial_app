@@ -25,7 +25,7 @@ export default function Page() {
             <div className="bg-white shadow-lg rounded-lg p-6 transform hover:scale-105 transition duration-300">
               <p className="text-gray-700 mb-4">"This app has revolutionized the way we gather and utilize testimonials. Our business growth is undeniable!"</p>
               <div className="flex items-center">
-                <img src="/images/user1.jpg" alt="User 1" className="w-12 h-12 rounded-full mr-4" />
+            
                 <div>
                   <h3 className="text-lg font-semibold">Jane Doe</h3>
                   <p className="text-sm text-gray-500">CEO, Acme Corp</p>
@@ -36,7 +36,7 @@ export default function Page() {
             <div className="bg-white shadow-lg rounded-lg p-6 transform hover:scale-105 transition duration-300">
               <p className="text-gray-700 mb-4">"An essential tool for any business looking to harness the power of customer feedback."</p>
               <div className="flex items-center">
-                <img src="/images/user2.jpg" alt="User 2" className="w-12 h-12 rounded-full mr-4" />
+                
                 <div>
                   <h3 className="text-lg font-semibold">John Smith</h3>
                   <p className="text-sm text-gray-500">Marketing Manager, Beta Ltd</p>

@@ -13,7 +13,7 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet"
-import { cn } from "@/lib/utils"
+
 
 export function Navbar() {
   const { user, isLoaded } = useUser()
