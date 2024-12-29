@@ -23,7 +23,7 @@ export default function Page() {
           <div className="flex flex-wrap justify-center gap-8">
             {/* Testimonial Card */}
             <div className="bg-white shadow-lg rounded-lg p-6 transform hover:scale-105 transition duration-300">
-              <p className="text-gray-700 mb-4">"This app has revolutionized the way we gather and utilize testimonials. Our business growth is undeniable!"</p>
+              <p className="text-gray-700 mb-4">&quot;This app has revolutionized the way we gather and utilize testimonials. Our business growth is undeniable!&quot;</p>
               <div className="flex items-center">
             
                 <div>
@@ -34,7 +34,17 @@ export default function Page() {
             </div>
             {/* Repeat Testimonial Cards as Needed */}
             <div className="bg-white shadow-lg rounded-lg p-6 transform hover:scale-105 transition duration-300">
-              <p className="text-gray-700 mb-4">"An essential tool for any business looking to harness the power of customer feedback."</p>
+              <p className="text-gray-700 mb-4">This app has revolutionized the way we gather and utilize testimonials. Our business growth is undeniable!</p>
+              <div className="flex items-center">
+                
+                <div>
+                  <h3 className="text-lg font-semibold">John Smith</h3>
+                  <p className="text-sm text-gray-500">Marketing Manager, Beta Ltd</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white shadow-lg rounded-lg p-6 transform hover:scale-105 transition duration-300">
+              <p className="text-gray-700 mb-4">&quot;An essential tool for any business looking to harness the power of customer feedback.&quot;</p>
               <div className="flex items-center">
                 
                 <div>
