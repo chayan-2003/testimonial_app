@@ -57,9 +57,9 @@ export default function Page() {
           </div>
         </div>
       </section>
-      <section className="py-16">
+      <section className="py-16  bg-slate-400">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-semibold mb-8">Features</h2>
+          <h2 className="text-3xl font-semibold mb-8 text-cyan-950">Features</h2>
           <div className="flex flex-wrap justify-center gap-8">
             {/* Feature Card */}
             <div className="w-80 bg-white shadow-lg rounded-lg p-6 hover:shadow-2xl transition duration-300">
