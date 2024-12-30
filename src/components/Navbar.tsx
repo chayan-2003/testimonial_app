@@ -29,10 +29,10 @@ export function Navbar() {
   }, [user, isLoaded])
 
   return (
-    <header>
+    <header className="w-full bg-white shadow-md">
       <nav className="container flex h-16 items-center bg-white">
         {/* Logo and Navigation Links */}
-        <div className="mr-8 hidden md:flex">
+        <div className=" hidden md:flex mr-0">
           <Link href="/" className="mr-6 flex items-center space-x-2">
             <span className="h-6 w-6 rounded-lg bg-primary" />
             <span className="font-bold">Testify</span>
@@ -101,7 +101,9 @@ export function Navbar() {
             </SignedOut>
             <SignedIn>
               {/* User Button */}
+              <div className="mr-3">
               <UserButton afterSignOutUrl="/" />
+              </div>
             </SignedIn>
           </div>
         </div>
