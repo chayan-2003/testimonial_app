@@ -1,62 +1,88 @@
-import { Webhook } from "svix";
-import { headers } from "next/headers";
-import { WebhookEvent } from "svix";
-import prisma from "@/lib/prisma";
+// Filepath: /src/app/api/webhook/register/route.ts
+
+import { NextResponse } from "next/server";
+import { Webhook, WebhookEvent } from "svix";
+import prisma from "@/lib/prisma"; // Adjust based on your project structure
+
+// Define the shape of your webhook payload for "user.created" event
+interface UserCreatedPayload {
+  id: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  // Add other relevant fields based on Clerk's webhook payload
+}
 
 export async function POST(req: Request) {
-  const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;
+  console.log("Received Webhook Request");
 
-  // Fetch headers for verification
-  const headerPayload = headers();
-  const svix_id = headerPayload.get("svix-id"); // Corrected header name
-  const svix_timestamp = headerPayload.get("svix-timestamp");
-  const svix_signature = headerPayload.get("svix-signature-ed25519");
+  const headers = req.headers;
+  const svix_id = headers.get("svix-id");
+  const svix_timestamp = headers.get("svix-timestamp");
+  const svix_signature = headers.get("svix-signature-ed25519");
 
-  // Validate if the necessary headers are provided
+  // Validate required headers
   if (!svix_id || !svix_signature || !svix_timestamp) {
-    return new Response("Missing required headers", { status: 400 });
+    console.error("Missing required headers");
+    return NextResponse.json({ message: "Missing required headers" }, { status: 400 });
   }
 
-  // Extract payload from the request
-  const payload = await req.json();
-  const body = JSON.stringify(payload);
+  const body = await req.text();
+  console.log("Webhook Body:", body);
 
-  // Initialize the Svix Webhook and verify the signature
+  // Initialize Svix Webhook with the secret
+  const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;
+  if (!WEBHOOK_SECRET) {
+    console.error("WEBHOOK_SECRET is not defined");
+    return NextResponse.json({ message: "Server Misconfiguration" }, { status: 500 });
+  }
+
   const wh = new Webhook(WEBHOOK_SECRET);
 
   let evt: WebhookEvent;
   try {
     evt = wh.verify(body, {
-      "svix-id": svix_id,
-      "svix-timestamp": svix_timestamp,
-      "svix-signature-ed25519": svix_signature,
-    }) as WebhookEvent;
-  } catch (e) {
-    console.error("Error verifying webhook", e); // Log the error
-    return new Response("Failed to parse or verify webhook", { status: 400 });
+      id: svix_id,
+      timestamp: svix_timestamp,
+      signature: svix_signature,
+    });
+    console.log("Webhook verified successfully:", evt.type);
+  } catch (err) {
+    console.error("Webhook verification failed:", err);
+    return NextResponse.json({ message: "Invalid signature" }, { status: 400 });
   }
 
-  // Extract user data from the event and process it
-  const { id, email } = evt.data;
-  const eventType = evt.type;
+  // Handle specific event types
+  if (evt.type === "user.created") {
+    const data = evt.payload as UserCreatedPayload;
+    console.log("Handling 'user.created' event for user ID:", data.id);
 
-  if (eventType === "user.created") {
+    // Example: Save the new user to your database
     try {
-      // Store the user data in the database
       await prisma.user.create({
         data: {
-          email,
-          svixId: id, // Assuming you want to store Svix ID along with email
+          id: data.id,
+          email: data.email,
+          // Add other fields as necessary
         },
       });
-
-      return new Response("User created successfully", { status: 200 });
+      console.log("User saved to database:", data.id);
     } catch (error) {
-      console.error("Error saving user to database", error); // Log database error
-      return new Response("Failed to store user", { status: 500 });
+      console.error("Database error:", error);
+      return NextResponse.json({ message: "Database error" }, { status: 500 });
     }
+  } else {
+    console.warn(`Unhandled event type: ${evt.type}`);
   }
 
-  // Return a response if event type is not 'user.created'
-  return new Response("Event type not supported", { status: 400 });
+  console.log("Webhook processing completed");
+  return NextResponse.json({ message: "Webhook received" }, { status: 200 });
+}
+
+/**
+ * Generates a unique identifier or token if needed.
+ * Modify as per your requirements.
+ */
+function generateUniqueLink(): string {
+  return crypto.randomBytes(16).toString("hex");
 }
