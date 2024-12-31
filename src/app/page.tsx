@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import './globals.css';
-import { Navbar } from '@/components/Navbar';
+import { Navbar}  from '@/components/Navbar';
 
 export default function Page() {
   return (
