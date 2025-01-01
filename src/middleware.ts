@@ -1,13 +1,11 @@
-// Filepath: /middleware.ts
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 
-import { NextResponse } from 'next/server'
+const isProtectedRoute = createRouteMatcher(['/protected(.*)'])
 
-// Middleware function that does nothing and allows all requests to pass through
-export function middleware(req) {
-  return NextResponse.next();
-}
+export default clerkMiddleware((auth, req) => {
+  if (isProtectedRoute(req)) auth().protect()
+})
 
-// Configure middleware to apply to no routes
 export const config = {
-  matcher: [], // Empty array means no routes are matched, so middleware is effectively disabled
-};
+  matcher: ['/((?!.*\\..*|_next).*)', '/', '/(api|trpc)(.*)']
+}
