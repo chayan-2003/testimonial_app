@@ -1,88 +1,84 @@
-// Filepath: /src/app/api/webhook/register/route.ts
-
-import { NextResponse } from "next/server";
-import { Webhook, WebhookEvent } from "svix";
-import prisma from "@/lib/prisma"; // Adjust based on your project structure
-
-// Define the shape of your webhook payload for "user.created" event
-interface UserCreatedPayload {
-  id: string;
-  email: string;
-  firstName?: string;
-  lastName?: string;
-  // Add other relevant fields based on Clerk's webhook payload
-}
+import { Webhook } from "svix";
+import { headers } from "next/headers";
+import { WebhookEvent } from "@clerk/nextjs/server";
+import prisma from "@/lib/prisma";
 
 export async function POST(req: Request) {
-  console.log("Received Webhook Request");
-
-  const headers = req.headers;
-  const svix_id = headers.get("svix-id");
-  const svix_timestamp = headers.get("svix-timestamp");
-  const svix_signature = headers.get("svix-signature-ed25519");
-
-  // Validate required headers
-  if (!svix_id || !svix_signature || !svix_timestamp) {
-    console.error("Missing required headers");
-    return NextResponse.json({ message: "Missing required headers" }, { status: 400 });
-  }
-
-  const body = await req.text();
-  console.log("Webhook Body:", body);
-
-  // Initialize Svix Webhook with the secret
   const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;
+
   if (!WEBHOOK_SECRET) {
-    console.error("WEBHOOK_SECRET is not defined");
-    return NextResponse.json({ message: "Server Misconfiguration" }, { status: 500 });
+    throw new Error(
+      "Please add WEBHOOK_SECRET from Clerk Dashboard to .env or .env.local"
+    );
   }
+
+  const headerPayload = headers();
+  const svix_id = headerPayload.get("svix-id");
+  const svix_timestamp = headerPayload.get("svix-timestamp");
+  const svix_signature = headerPayload.get("svix-signature");
+
+  if (!svix_id || !svix_timestamp || !svix_signature) {
+    return new Response("Error occurred -- no svix headers", {
+      status: 400,
+    });
+  }
+
+  const payload = await req.json();
+  const body = JSON.stringify(payload);
 
   const wh = new Webhook(WEBHOOK_SECRET);
-
   let evt: WebhookEvent;
+
   try {
     evt = wh.verify(body, {
-      id: svix_id,
-      timestamp: svix_timestamp,
-      signature: svix_signature,
-    });
-    console.log("Webhook verified successfully:", evt.type);
+      "svix-id": svix_id,
+      "svix-timestamp": svix_timestamp,
+      "svix-signature": svix_signature,
+    }) as WebhookEvent;
   } catch (err) {
-    console.error("Webhook verification failed:", err);
-    return NextResponse.json({ message: "Invalid signature" }, { status: 400 });
+    console.error("Error verifying webhook:", err);
+    return new Response("Error occurred", {
+      status: 400,
+    });
   }
 
-  // Handle specific event types
-  if (evt.type === "user.created") {
-    const data = evt.payload as UserCreatedPayload;
-    console.log("Handling 'user.created' event for user ID:", data.id);
+  const { id } = evt.data;
+  const eventType = evt.type;
 
-    // Example: Save the new user to your database
+  console.log(`Webhook with an ID of ${id} and type of ${eventType}`);
+  console.log("Webhook body:", body);
+
+  // Handling 'user.created' event
+  if (eventType === "user.created") {
     try {
-      await prisma.user.create({
+      const { email_addresses, primary_email_address_id } = evt.data;
+      console.log(evt.data);
+      // Safely find the primary email address
+      const primaryEmail = email_addresses.find(
+        (email) => email.id === primary_email_address_id
+      );
+      console.log("Primary email:", primaryEmail);
+      console.log("Email addresses:", primaryEmail?.email_address);
+
+      if (!primaryEmail) {
+        console.error("No primary email found");
+        return new Response("No primary email found", { status: 400 });
+      }
+
+      // Create the user in the database
+      const newUser = await prisma.user.create({
         data: {
-          id: data.id,
-          email: data.email,
-          // Add other fields as necessary
+          id: evt.data.id!,
+          email: primaryEmail.email_address,
+         
         },
       });
-      console.log("User saved to database:", data.id);
+      console.log("New user created:", newUser);
     } catch (error) {
-      console.error("Database error:", error);
-      return NextResponse.json({ message: "Database error" }, { status: 500 });
+      console.error("Error creating user in database:", error);
+      return new Response("Error creating user", { status: 500 });
     }
-  } else {
-    console.warn(`Unhandled event type: ${evt.type}`);
   }
 
-  console.log("Webhook processing completed");
-  return NextResponse.json({ message: "Webhook received" }, { status: 200 });
-}
-
-/**
- * Generates a unique identifier or token if needed.
- * Modify as per your requirements.
- */
-function generateUniqueLink(): string {
-  return crypto.randomBytes(16).toString("hex");
+  return new Response("Webhook received successfully", { status: 200 });
 }
