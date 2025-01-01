@@ -1,8 +1,10 @@
+// Filepath: /middleware.ts
+
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 
 // Define routes that require authentication
-const isProtectedRoute = createRouteMatcher(['/dashboard', '/forum(.*)'])
+const isProtectedRoute = createRouteMatcher(['/dashboard', '/forum/:path*'])
 
 // Define routes that should be excluded from middleware (e.g., webhook endpoints)
 const isExcludedRoute = createRouteMatcher(['/api/webhook/register'])
@@ -16,17 +18,20 @@ export default clerkMiddleware(async (auth, req) => {
   const { userId, redirectToSignIn } = await auth()
 
   if (!userId && isProtectedRoute(req)) {
-    // Add custom logic to run before redirecting if needed
+    // Optionally, add custom logic before redirecting
     return redirectToSignIn()
   }
 })
 
-// Configure matcher to apply middleware to all routes except excluded ones
 export const config = {
   matcher: [
-    "/((?!.+\\.[\\w]+$|_next|api/webhook/register).*)",
-    "/", // Root route
-    "/(api|trpc)(?!/webhook/register)(.*)", // Other API routes excluding webhook
-    "!/api/webhook/register", // Explicitly exclude webhook
+    // Apply middleware to the root route
+    '/',
+    // Apply middleware to protected routes
+    '/dashboard/:path*',
+    '/forum/:path*',
+    // Apply middleware to all other API routes except the excluded webhook endpoint
+    '/api/:path*',
+    '/trpc/:path*',
   ],
 };
