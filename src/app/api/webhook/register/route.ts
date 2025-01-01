@@ -70,7 +70,7 @@ export async function POST(req: Request) {
         data: {
           id: evt.data.id!,
           email: primaryEmail.email_address,
-         
+          sharedLink: "", // Provide a default or generated value for sharedLink
         },
       });
       console.log("New user created:", newUser);
