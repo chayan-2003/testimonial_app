@@ -1,5 +1,5 @@
 import {auth} from  '@clerk/nextjs/server';
- async  function check()
+ async  function   check()
  {
     const {userId}=await auth();
     if(userId)
